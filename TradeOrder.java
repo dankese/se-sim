@@ -22,46 +22,71 @@ public class TradeOrder {
 		return null;
 	}
 	
-//public java.lang.String getSymbol()
-//Returns the stock symbol for this trade order.
-//Returns:
-//the stock symbol for this trade order.
-//
-
-//public boolean isBuy()
-//Returns true if this is a buy order; otherwise returns false.
-//Returns:
-//true if this is a buy order; false otherwise.
-//
-//public boolean isSell()
-//Returns true if this is a sell order; otherwise returns false.
-//Returns:
-//true if this is a sell order; false otherwise.
-//
-//public boolean isMarket()
-//Returns true if this is a market order; otherwise returns false.
-//Returns:
-//true if this is a market order; false otherwise.
-//
-//public boolean isLimit()
-//Returns true if this is a limit order; otherwise returns false.
-//Returns:
-//true if this is a limit order; false otherwise.
-//
-//public int getShares()
-//Returns the number of shares to be traded in this trade order.
-//Returns:
-//the number of shares to be traded in this trade order.
-//
-//public double getPrice()
-//Returns the price per share for this trade order (used by a limit order).
-//Returns:
-//the price per share for this trade order.
-//
-//public void subtractShares(int shares)
-//Subtracts a given number of shares from the total number of shares in this trade order.
-//Parameters:
-//shares - a number of shares to be subtracted.
-//Throws:
-//java.lang.IllegalArgumentException - if shares is greater than the number of shares in this order.
+	/**
+	 * 
+	 * @return - the stock symbol for this trade order.
+	 */
+	public String getSymbol(){
+		return null;
+	}
+	
+	/**
+	 * Returns true if this is a buy order; otherwise returns false.
+	 * @return - true if this is a buy order; false otherwise.
+	 */
+	public boolean isBuy(){
+		return false;
+	}
+	
+	/**
+	 * Returns true if this is a sell order; otherwise returns false.
+	 * @return - true if this is a sell order; false otherwise.
+	 */
+	public boolean isSell(){
+		return true;
+	}
+	
+	/**
+	 * Returns true if this is a market order; otherwise returns false.
+	 * @return
+	 */
+	public boolean isMarket(){
+		return true;
+	}
+	
+	
+	/**
+	 * Returns true if this is a limit order; otherwise returns false.
+	 * @return
+	 */
+	public boolean isLimit(){
+		return true;
+	}
+	
+	/**
+	 * Returns the number of shares to be traded in this trade order.
+	 * @return
+	 */
+	public int getShares(){
+		return 0;
+	}
+	
+	/**
+	 * Returns the price per share for this trade order (used by a limit order).
+	 * @return
+	 */
+	public double getPrice(){
+		return 8008135;
+	}
+	
+	/**
+	 * Subtracts a given number of shares from the total number of shares in this trade order.
+	 * @param shares - a number of shares to be subtracted.
+	 * 
+	 * Throws:
+	 * java.lang.IllegalArgumentException - if shares is greater than the number of shares in this order.
+	 */
+	public void subtractShares(int shares){
+		
+	}
 }
