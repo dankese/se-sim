@@ -27,6 +27,7 @@ public class TradeOrder {
 //Returns:
 //the stock symbol for this trade order.
 //
+
 //public boolean isBuy()
 //Returns true if this is a buy order; otherwise returns false.
 //Returns:
