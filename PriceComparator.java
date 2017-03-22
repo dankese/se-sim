@@ -1,18 +1,15 @@
+import java.util.Comparator;
 
-public class PriceComparator implements Comparable<Trader>{
+public class PriceComparator implements Comparator<TradeOrder>{
 
-	@Override
-	public int compareTo(Trader arg0) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	
+	private boolean ascending;
+
 	/**
 	 * Constructs a price comparator that compares two orders in ascending order.
 	 * Sets the private boolean ascending flag to true.
 	 */
 	public PriceComparator(){
-		
+		ascending = true;
 	}
 
 	/**
@@ -22,7 +19,7 @@ public class PriceComparator implements Comparable<Trader>{
 	 * @param asc
 	 */
 	public PriceComparator(boolean asc){
-		
+		ascending = asc;
 	}
 	
 	/**
@@ -37,8 +34,19 @@ public class PriceComparator implements Comparable<Trader>{
 	 * In the latter case, the difference returned is cents1 - cents2 or cents2 - cents1, depending on whether 
 	 * this is an ascending or descending comparator (ascending is true or false).
 	 */
-	public int compare(TradeOrder order1, TradeOrder order2){
-		
-		return 0;
+	public int compare(TradeOrder order1, TradeOrder order2) {
+		if(order1.isMarket() || order2.isMarket() ) {
+			if(order2.isLimit() ) return -1;
+			if(order1.isLimit()) return 1;
+			return 0;
+		}else{
+			double cents = (order1.getPrice() - order2.getPrice())*100;
+			if(!ascending) return (int) (-1*cents);
+			return (int) cents;
+		}
 	}
+
+
+
+
 }
