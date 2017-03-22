@@ -1,7 +1,14 @@
 import java.text.DecimalFormat;
+import java.util.PriorityQueue;
 
 public class Stock {
 	public static DecimalFormat money;
+	private String ticker, company;
+	private double open, high, low, close;
+	private int volume;
+	
+	private PriorityQueue<TradeOrder> buy, sell;
+	
 
 	/**
 	 * Constructs a new stock with a given symbol, company name, and starting price. 
@@ -14,7 +21,15 @@ public class Stock {
 	 * @param price
 	 */
 	public Stock(String symbol, String name, double price){
-		
+		ticker = symbol; 
+		company = name; 
+		open = price; 
+		high = price; 
+		low = price; 
+		close = price; 
+		volume = 0;
+		buy = new PriorityQueue<TradeOrder>(20,new PriceComparator());
+		sell = new PriorityQueue<TradeOrder>(20, new PriceComparator(false));
 	}
 	
 	
@@ -26,14 +41,13 @@ public class Stock {
 	 * no buy orders). 
 	 * 
 	 * For example:
- 	 * Giggle.com (GGGL)
- 	 * Price: 10.00  hi: 10.00  lo: 10.00  vol: 0
- 	 * Ask: 12.75 size: 300  Bid: 12.00 size: 500
+ 	 * 
 	 * @return
 	 */
 	public String getQuote(){
-		
-		return null;
+		return company + " (" + ticker + ")/nPrice: " + close + " hi: " + high +  " lo: " + low + " vol: "
+					+ volume + " Ask: " + sell.peek().getPrice() + " size: " + sell.peek().getShares() + 
+					" Bid: " + buy.peek().getPrice() + " size: " + buy.peek().getShares();
 	}
 	
 	/**
@@ -49,6 +63,8 @@ public class Stock {
 	 * @param order
 	 */
 	public void placeOrder(TradeOrder order){
+		if(order.isBuy()) buy.add(order);
+		else sell.add(order);
 		
 	}
 
