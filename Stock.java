@@ -66,10 +66,20 @@ public class Stock {
      * @param order
      */
     public void placeOrder(TradeOrder order) {
-        if (order.isBuy()) buy.add(order);
-        else sell.add(order);
-
-    }
+        String msg = "New order: ";
+		if(order.isBuy()) {
+			buy.add(order);
+			msg+= "BUY ";
+		}
+		else {
+			sell.add(order);
+			msg+= "SELL ";
+		}
+		
+		msg += ticker + " (" + company + ")\n" + order.getShares() + " shares at $" + order.getPrice();
+		
+		order.getTrader().receiveMessage(msg);
+	}
 
     /**
      * (Called at the end of any Stock's PLACE ORDER method to resolve
