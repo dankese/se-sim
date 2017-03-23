@@ -1,9 +1,6 @@
 import java.util.HashMap;
 import java.util.TreeSet;
 
-/**
- * Created by PaulPlaia18 on 3/21/2017.
- */
 public class Brokerage {
 
     private HashMap<String, Trader> registeredTraders;
