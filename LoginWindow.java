@@ -1,3 +1,4 @@
+
 import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
@@ -14,176 +15,163 @@ import javax.swing.border.EmptyBorder;
 /**
  * Provides GUI for registering and logging in users.
  */
-public class LoginWindow extends JFrame
-{
-  private static JFrame thisWindow;
-  private static Login server;
 
-  private JTextField nameField;
-  private JPasswordField passwordField;
+public class LoginWindow extends JFrame {
+    private static JFrame thisWindow;
+    private static Login server;
 
-  /**
-   * Constructs a new login window.
-   * @param title title bar text.
-   * @param server an object that keeps track of all the registered and
-   * logged-in users.
-   */
-  public LoginWindow(String title, Login server)
-  {
-    super(title);
-    LoginWindow.server = server;
-    thisWindow = this;
+    private JTextField nameField;
+    private JPasswordField passwordField;
 
-    JLabel nameLabel = new JLabel("Login name:", JLabel.RIGHT);
-    nameField = new JTextField(20);
+    /**
+     * Constructs a new login window.
+     *
+     * @param title  title bar text.
+     * @param server an object that keeps track of all the registered and
+     *               logged-in users.
+     */
 
-    LoginListener loginListener = new LoginListener();
-    passwordField = new JPasswordField(20);
-    passwordField.addActionListener(loginListener);
+    public LoginWindow(String title, Login server) {
+        super(title);
+        LoginWindow.server = server;
+        thisWindow = this;
 
-    JButton loginBtn = new JButton("Login");
-    loginBtn.addActionListener(loginListener);
+        JLabel nameLabel = new JLabel("Login name:", JLabel.RIGHT);
+        nameField = new JTextField(20);
 
-    JButton registerBtn = new JButton("New user...");
-    registerBtn.addActionListener(new RegistrationListener());
+        LoginListener loginListener = new LoginListener();
+        passwordField = new JPasswordField(20);
+        passwordField.addActionListener(loginListener);
 
-    JPanel fieldsPanel = new JPanel(new GridLayout(3, 3, 10, 10));
-    fieldsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        JButton loginBtn = new JButton("Login");
+        loginBtn.addActionListener(loginListener);
 
-    fieldsPanel.add(nameLabel);
-    fieldsPanel.add(nameField);
-    fieldsPanel.add(new JPanel());  // filler
+        JButton registerBtn = new JButton("New user...");
+        registerBtn.addActionListener(new RegistrationListener());
 
-    fieldsPanel.add(new JLabel("Password:", JLabel.RIGHT));
-    fieldsPanel.add(passwordField);
-    fieldsPanel.add(new JPanel());  // filler
+        JPanel fieldsPanel = new JPanel(new GridLayout(3, 3, 10, 10));
+        fieldsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-    fieldsPanel.add(new JPanel());  // filler
-    fieldsPanel.add(loginBtn);
-    fieldsPanel.add(registerBtn);
+        fieldsPanel.add(nameLabel);
+        fieldsPanel.add(nameField);
+        fieldsPanel.add(new JPanel());  // filler
 
-    Container c = getContentPane();
-    c.add(fieldsPanel);
-  }
+        fieldsPanel.add(new JLabel("Password:", JLabel.RIGHT));
+        fieldsPanel.add(passwordField);
+        fieldsPanel.add(new JPanel());  // filler
 
-  /******************************************************************/
-  /***      passwordField and "Login" button events handling      ***/
-  /******************************************************************/
+        fieldsPanel.add(new JPanel());  // filler
+        fieldsPanel.add(loginBtn);
+        fieldsPanel.add(registerBtn);
 
-  private class LoginListener implements ActionListener
-  {
-    public void actionPerformed(ActionEvent e)
-    {
-      String name = nameField.getText().trim().toLowerCase();
-      String password = (new String(passwordField.getPassword())).trim().toLowerCase();
-      tryLogin(name, password);
-      nameField.setText("");
-      passwordField.setText("");
+        Container c = getContentPane();
+        c.add(fieldsPanel);
     }
 
-    private void tryLogin(String name, String password)
-    {
-      String errorMsg = "";
-      int result = server.login(name, password);
+    /******************************************************************/
+    /***      passwordField and "Login" button events handling      ***/
+    /******************************************************************/
 
-      if (result < 0)
-      {
-        if (result == -1)
-          errorMsg = "User unknown";
-        else if (result == -2)
-          errorMsg = "Invalid password";
-        else if (result == -3)
-          errorMsg = "User already logged in";
-        else
-          errorMsg = "Unknown error code";
-
-        JOptionPane.showMessageDialog(thisWindow, errorMsg,
-                        "Login failed", JOptionPane.ERROR_MESSAGE);
-      }
-    }
-  }
-
-  /******************************************************************/
-  /*********      "New user..." button events handling      *********/
-  /******************************************************************/
-
-  private class RegistrationListener implements ActionListener
-  {
-    public void actionPerformed(ActionEvent e)
-    {
-      while (!registered());
-    }
-
-    private boolean registered()
-    {
-      JLabel regNameLabel = new JLabel("Login name (4-10 chars):", JLabel.RIGHT);
-      JTextField regNameField = new JTextField(20);
-      JLabel regPasswordLabel = new JLabel("Password (2-10 chars):", JLabel.RIGHT);
-      JPasswordField regPasswordField = new JPasswordField(20);
-      JLabel regPasswordLabel2 = new JLabel("Confirm password:", JLabel.RIGHT);
-      JPasswordField regPasswordField2 = new JPasswordField(20);
-
-      JPanel fieldsPanel = new JPanel();
-      fieldsPanel.setLayout(new GridLayout(3, 2, 10, 10));
-      fieldsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-      fieldsPanel.add(regNameLabel);
-      fieldsPanel.add(regNameField);
-      fieldsPanel.add(regPasswordLabel);
-      fieldsPanel.add(regPasswordField);
-      fieldsPanel.add(regPasswordLabel2);
-      fieldsPanel.add(regPasswordField2);
-
-      final String optionNames[] = {"Register", "Cancel"};
-
-      if (JOptionPane.showOptionDialog(thisWindow, fieldsPanel,
-          "New user registration", JOptionPane.OK_CANCEL_OPTION,
-          JOptionPane.PLAIN_MESSAGE, null, optionNames,
-          optionNames[0]) != 0)
-        return true;  // User pressed "Cancel"
-
-      String name = regNameField.getText().trim().toLowerCase();
-      String password = (new String(regPasswordField.getPassword())).trim().toLowerCase();
-      String password2 = (new String(regPasswordField2.getPassword())).trim().toLowerCase();
-
-      String errorMsg = "";
-      int result = password.compareTo(password2);
-
-      if (result != 0)
-      {
-        errorMsg = "Passwords mismatch, re-enter";
-      }
-      else
-      {
-        result = server.addUser(name, password);
-        if (result < 0)
-        {
-          if (result == -1)
-            errorMsg = "Login name must be 4-10 characters long";
-          else if (result == -2)
-            errorMsg = "Password must be 2-10 characters long";
-          else if (result == -3)
-            errorMsg = "Login name already taken, choose another one";
-          else
-            errorMsg = "Unknown error code";
+    private class LoginListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            String name = nameField.getText().trim().toLowerCase();
+            String password = (new String(passwordField.getPassword())).trim().toLowerCase();
+            tryLogin(name, password);
+            nameField.setText("");
+            passwordField.setText("");
         }
-      }
 
-      if (result != 0)
-      {
-        JOptionPane.showMessageDialog(thisWindow, errorMsg,
-                    "Registration failed", JOptionPane.ERROR_MESSAGE);
-        nameField.setText("");
-        passwordField.setText("");
-        return false;
-      }
-      else
-      {
-        JOptionPane.showMessageDialog(thisWindow, "Added " + name,
-                    "Registration successful", JOptionPane.INFORMATION_MESSAGE);
-        nameField.setText(name);
-        passwordField.setText(password);
-        return true;
-      }
+        private void tryLogin(String name, String password) {
+            String errorMsg = "";
+            int result = server.login(name, password);
+
+            if (result < 0) {
+                if (result == -1)
+                    errorMsg = "User unknown";
+                else if (result == -2)
+                    errorMsg = "Invalid password";
+                else if (result == -3)
+                    errorMsg = "User already logged in";
+                else
+                    errorMsg = "Unknown error code";
+
+                JOptionPane.showMessageDialog(thisWindow, errorMsg,
+                        "Login failed", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
-  }
+
+    /******************************************************************/
+    /*********      "New user..." button events handling      *********/
+    /******************************************************************/
+
+    private class RegistrationListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            while (!registered()) ;
+        }
+
+        private boolean registered() {
+            JLabel regNameLabel = new JLabel("Login name (4-10 chars):", JLabel.RIGHT);
+            JTextField regNameField = new JTextField(20);
+            JLabel regPasswordLabel = new JLabel("Password (2-10 chars):", JLabel.RIGHT);
+            JPasswordField regPasswordField = new JPasswordField(20);
+            JLabel regPasswordLabel2 = new JLabel("Confirm password:", JLabel.RIGHT);
+            JPasswordField regPasswordField2 = new JPasswordField(20);
+
+            JPanel fieldsPanel = new JPanel();
+            fieldsPanel.setLayout(new GridLayout(3, 2, 10, 10));
+            fieldsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+            fieldsPanel.add(regNameLabel);
+            fieldsPanel.add(regNameField);
+            fieldsPanel.add(regPasswordLabel);
+            fieldsPanel.add(regPasswordField);
+            fieldsPanel.add(regPasswordLabel2);
+            fieldsPanel.add(regPasswordField2);
+
+            final String optionNames[] = {"Register", "Cancel"};
+
+            if (JOptionPane.showOptionDialog(thisWindow, fieldsPanel,
+                    "New user registration", JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE, null, optionNames,
+                    optionNames[0]) != 0)
+                return true;  // User pressed "Cancel"
+
+            String name = regNameField.getText().trim().toLowerCase();
+            String password = (new String(regPasswordField.getPassword())).trim().toLowerCase();
+            String password2 = (new String(regPasswordField2.getPassword())).trim().toLowerCase();
+
+            String errorMsg = "";
+            int result = password.compareTo(password2);
+
+            if (result != 0) {
+                errorMsg = "Passwords mismatch, re-enter";
+            } else {
+                result = server.addUser(name, password);
+                if (result < 0) {
+                    if (result == -1)
+                        errorMsg = "Login name must be 4-10 characters long";
+                    else if (result == -2)
+                        errorMsg = "Password must be 2-10 characters long";
+                    else if (result == -3)
+                        errorMsg = "Login name already taken, choose another one";
+                    else
+                        errorMsg = "Unknown error code";
+                }
+            }
+
+            if (result != 0) {
+                JOptionPane.showMessageDialog(thisWindow, errorMsg,
+                        "Registration failed", JOptionPane.ERROR_MESSAGE);
+                nameField.setText("");
+                passwordField.setText("");
+                return false;
+            } else {
+                JOptionPane.showMessageDialog(thisWindow, "Added " + name,
+                        "Registration successful", JOptionPane.INFORMATION_MESSAGE);
+                nameField.setText(name);
+                passwordField.setText(password);
+                return true;
+            }
+        }
+    }
 }
