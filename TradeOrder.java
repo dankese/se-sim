@@ -1,121 +1,159 @@
-public class TradeOrder {
+import java.text.DecimalFormat;
+import java.util.PriorityQueue;
 
-    private Trader trader;
-    private String symbol;
-    private boolean buyOrder;
-    private boolean marketOrder;
-    private int numShares;
-    private double price;
+public class Stock {
+    public static DecimalFormat money;
+    private String symbol, company;
+    private double open, high, low, close;
+    private int volume;
+
+    private PriorityQueue<TradeOrder> buy, sell;
 
     /**
-     * Constructs a new TradeOrder for a given trader, stock symbol, a number of shares, and other parameters.
+     * Constructs a new stock with a given symbol, company name, and starting price.
+     * Sets low price, high price, and last price to the same opening price. Sets "day" volume to zero.
+     * Initializes a priority qieue for sell orders to an empty PriorityQueue with a PriceComparator configured
+     * for comparing orders in ascending order; initializes a priority qieue for buy orders to an empty PriorityQueue
+     * with a PriceComparator configured for comparing orders in descending order.
      *
-     * @param trader      - a trader who placed this order.
-     * @param symbol      - stock symbol.
-     * @param buyOrder    - if true this is a buy order; otherwise this is a sell order.
-     * @param marketOrder - if true this is a market order; otherwise this is a limit order.
-     * @param numShares   - the number of shares to be traded.
-     * @param price       - the bid or ask price, if this is a limit order.
+     * @param symbol
+     * @param name
+     * @param price
      */
 
-    public TradeOrder(Trader trader, String symbol, boolean buyOrder, boolean marketOrder, int numShares, double price) {
-        this.trader = trader;
+    public Stock(String symbol, String name, double price) {
         this.symbol = symbol;
-        this.buyOrder = buyOrder;
-        this.marketOrder = marketOrder;
-        this.numShares = numShares;
-        this.price = price;
+        company = name;
+        open = price;
+        high = price;
+        low = price;
+        close = price;
+        volume = 0;
+        buy = new PriorityQueue<TradeOrder>(20, new PriceComparator(false));
+        sell = new PriorityQueue<TradeOrder>(20, new PriceComparator());
     }
 
+
     /**
-     * Returns the trader for this trade order.
+     * Returns a quote string for this stock. The quote includes: the company name for this stock;
+     * the stock symbol; last sale price; the lowest and highest day prices; the lowest price
+     * in a sell order (or "market") and the number of shares in it (or "none" if there are no sell orders);
+     * the highest price in a buy order (or "market") and the number of shares in it (or "none" if there are
+     * no buy orders).
+     * <p>
+     * For example:
      *
      * @return
      */
 
-    public Trader getTrader() {
-        return trader;
+    public String getQuote() {
+        return company + " (" + symbol + ")/nPrice: " + close + " hi: " + high + " lo: " + low + " vol: "
+                + volume + " Ask: " + sell.peek().getPrice() + " size: " + sell.peek().getShares() +
+                " Bid: " + buy.peek().getPrice() + " size: " + buy.peek().getShares();
     }
 
     /**
-     * @return - the stock symbol for this trade order.
-     */
-
-    public String getSymbol() {
-        return symbol;
-    }
-
-    /**
-     * Returns true if this is a buy order; otherwise returns false.
+     * Places a trading order for this stock. Adds the order to the appropriate priority queue depending
+     * on whether this is a buy or sell order. Notifies the trader who placed the order that the order has
+     * been placed, by sending a message to that trader. For example:
+     * New order:  Buy GGGL (Giggle.com)
+     * 200 shares at $38.00
+     * Or:
+     * New order:  Sell GGGL (Giggle.com)
+     * 150 shares at market
+     * Executes pending orders by calling executeOrders.
      *
-     * @return - true if this is a buy order; false otherwise.
+     * @param order
      */
+    public void placeOrder(TradeOrder order) {
+        if (order.isBuy()) buy.add(order);
+        else sell.add(order);
 
-    public boolean isBuy() {
-        return buyOrder;
     }
 
     /**
-     * Returns true if this is a sell order; otherwise returns false.
-     *
-     * @return - true if this is a sell order; false otherwise.
+     * (Called at the end of any Stock's PLACE ORDER method to resolve
+     * as many orders as possible after a new order has been placed.)
+     * Executes as many pending orders as possible. <br>
+     * <p>
+     * 1. Examines the top sell order and the top buy order in
+     * the respective priority queues.<br>
+     * i) If both are limit orders and the asking price is less than
+     * or equal to the selling price, executes the order (or a part of it)
+     * at the sell order price.<br>
+     * ii) If one order is limit and the other is market, executes the
+     * order (or a part of it) at the limit order price<br>
+     * iii) If both orders are market, executes the order (or a part of it)
+     * at the last sale price.<br>
+     * <p>
+     * 2. Figures out how many shares can be traded, which
+     * is the smallest of the numbers of shares in the two orders.<br>
+     * <p>
+     * 3. Subtracts the traded number of shares from each order;
+     * Removes each of the orders with 0 remaining shares from the respective queue.<br>
+     * <p>
+     * 4. Updates the day's low price, high price, and volume.<br>
+     * <p>
+     * 5. Sends a message to each of the two traders involved in the transaction.
+     * For example:
+     * <p>
+     * You bought: 150 GGGL at 38.00 amt 5700.00</pre>
+     * <p>
+     * 6. Repeats steps 1-5 for as long as possible, that is as long as
+     * there is any movement in the buy / sell order queues.
+     * (The process gets stuck when the top buy order and sell order
+     * are both limit orders and the ask price is higher than the bid
+     * price.)
      */
 
-    public boolean isSell() {
-        return !buyOrder;
-    }
-
-    /**
-     * Returns true if this is a market order; otherwise returns false.
-     *
-     * @return
-     */
-
-    public boolean isMarket() {
-        return marketOrder;
-    }
-
-    /**
-     * Returns true if this is a limit order; otherwise returns false.
-     *
-     * @return
-     */
-
-    public boolean isLimit() {
-        return !marketOrder;
-    }
-
-    /**
-     * Returns the number of shares to be traded in this trade order.
-     *
-     * @return
-     */
-
-    public int getShares() {
-        return numShares;
-    }
-
-    /**
-     * Returns the price per share for this trade order (used by a limit order).
-     *
-     * @return
-     */
-
-    public double getPrice() {
-        return price;
-    }
-
-    /**
-     * Subtracts a given number of shares from the total number of shares in this trade order.
-     *
-     * @param shares - a number of shares to be subtracted.
-     *               <p>
-     *               Throws:
-     *               java.lang.IllegalArgumentException - if shares is greater than the number of shares in this order.
-     */
-
-    public void subtractShares(int shares) {
-        if (shares > numShares) throw new IllegalArgumentException();
-        else this.numShares -= shares;
+    protected void executeOrders() {
+        while (!buy.peek().isLimit() && !sell.peek().isLimit() && !(sell.peek().getPrice() > buy.peek().getPrice())
+                && !buy.isEmpty() && !sell.isEmpty()) {
+            int possShares = 0;
+            double transPrice = 0;
+            if (buy.peek().isLimit() && sell.peek().isLimit() && buy.peek().getPrice() <= sell.peek().getPrice()) {
+                // execute at the sell order price
+                possShares = Math.min(buy.peek().getShares(), sell.peek().getShares());
+                buy.peek().subtractShares(possShares);
+                sell.peek().subtractShares(possShares);
+                transPrice = sell.peek().getPrice();
+                if (transPrice < low) low = transPrice;
+                else if (transPrice > high) high = transPrice;
+                close = transPrice;
+                sell.peek().getTrader().receiveMessage("You sold: " + possShares + " " + sell.peek().getSymbol() +
+                        " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
+                buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
+                        " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
+                if (buy.peek().getShares() == 0) buy.poll();
+                else sell.poll();
+            } else if ((buy.peek().isLimit() && sell.peek().isMarket()) || (buy.peek().isMarket() && sell.peek().isLimit())) {
+                // execute at the limit order price
+                possShares = Math.min(buy.peek().getShares(), sell.peek().getShares());
+                buy.peek().subtractShares(possShares);
+                sell.peek().subtractShares(possShares);
+                if (buy.peek().isLimit()) transPrice = buy.peek().getPrice();
+                else if (sell.peek().isLimit()) transPrice = sell.peek().getPrice();
+                if (transPrice < low) low = transPrice;
+                else if (transPrice > high) high = transPrice;
+                close = transPrice;
+                sell.peek().getTrader().receiveMessage("You sold: " + possShares + " " + sell.peek().getSymbol() +
+                        " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
+                buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
+                        " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
+                if (buy.peek().getShares() == 0) buy.poll();
+                else sell.poll();
+            } else {
+                // execute at the last sale price
+                possShares = Math.min(buy.peek().getShares(), sell.peek().getShares());
+                buy.peek().subtractShares(possShares);
+                sell.peek().subtractShares(possShares);
+                sell.peek().getTrader().receiveMessage("You sold: " + possShares + " " + sell.peek().getSymbol() +
+                        " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
+                buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
+                        " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
+                if (buy.peek().getShares() == 0) buy.poll();
+                else sell.poll();
+            }
+        }
     }
 }
