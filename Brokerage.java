@@ -1,7 +1,10 @@
 import java.util.HashMap;
 import java.util.TreeSet;
 
-public class Brokerage {
+/**
+ * Created by PaulPlaia18 on 3/21/2017.
+ */
+public class Brokerage implements Login{
 
     private HashMap<String, Trader> registeredTraders;
     private TreeSet<Trader> loggedInTraders;
