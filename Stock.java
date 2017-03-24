@@ -47,9 +47,15 @@ public class Stock {
      */
 
     public String getQuote() {
-        return company + " (" + symbol + ")/nPrice: " + close + " hi: " + high + " lo: " + low + " vol: "
-                + volume + " Ask: " + sell.peek().getPrice() + " size: " + sell.peek().getShares() +
-                " Bid: " + buy.peek().getPrice() + " size: " + buy.peek().getShares();
+        String sellOrderStatus;
+        String buyOrderStatus;
+        if (sell.isEmpty()) sellOrderStatus = "none";
+        else sellOrderStatus = String.valueOf(sell.peek().getPrice()) + " size: " + sell.peek().getShares();
+        if (buy.isEmpty()) buyOrderStatus = "none";
+        else buyOrderStatus = String.valueOf(buy.peek().getPrice()) + " size: " + buy.peek().getShares();
+        return company + " (" + symbol + ")\nPrice: " + close + " hi: " + high + " lo: " + low + " vol: "
+                + volume + "\nAsk: " + sellOrderStatus +
+                " Bid: " + buyOrderStatus;
     }
 
     /**
@@ -66,26 +72,16 @@ public class Stock {
      * @param order
      */
     public void placeOrder(TradeOrder order) {
-        String msg = "New order: ";
-		if(order.isBuy()) {
-			buy.add(order);
-			msg+= "BUY ";
-		}
-		else {
-			sell.add(order);
-			msg+= "SELL ";
-		}
-		
-		msg += ticker + " (" + company + ")\n" + order.getShares() + " shares at $" + order.getPrice();
-		
-		order.getTrader().receiveMessage(msg);
-	}
+        if (order.isBuy()) buy.add(order);
+        else sell.add(order);
+
+    }
 
     /**
      * (Called at the end of any Stock's PLACE ORDER method to resolve
      * as many orders as possible after a new order has been placed.)
      * Executes as many pending orders as possible. <br>
-     *     
+     * <p>
      * 1. Examines the top sell order and the top buy order in
      * the respective priority queues.<br>
      * i) If both are limit orders and the asking price is less than
@@ -95,20 +91,20 @@ public class Stock {
      * order (or a part of it) at the limit order price<br>
      * iii) If both orders are market, executes the order (or a part of it)
      * at the last sale price.<br>
-     *     
+     * <p>
      * 2. Figures out how many shares can be traded, which
      * is the smallest of the numbers of shares in the two orders.<br>
-     *     
+     * <p>
      * 3. Subtracts the traded number of shares from each order;
      * Removes each of the orders with 0 remaining shares from the respective queue.<br>
-     *     
+     * <p>
      * 4. Updates the day's low price, high price, and volume.<br>
-     *     
+     * <p>
      * 5. Sends a message to each of the two traders involved in the transaction.
      * For example:
-     *
-     *    You bought: 150 GGGL at 38.00 amt 5700.00</pre>
-     *    
+     * <p>
+     * You bought: 150 GGGL at 38.00 amt 5700.00</pre>
+     * <p>
      * 6. Repeats steps 1-5 for as long as possible, that is as long as
      * there is any movement in the buy / sell order queues.
      * (The process gets stuck when the top buy order and sell order
@@ -116,10 +112,57 @@ public class Stock {
      * price.)
      */
 
-    protected void executeOrders()
-    {
-        while(!buy.peek().isLimit() && !sell.peek().isLimit() && (sell.peek().getPrice() > buy.peek().getPrice())) {
-            
+    protected void executeOrders() {
+        while (!buy.peek().isLimit() && !sell.peek().isLimit() && !(sell.peek().getPrice() > buy.peek().getPrice())
+                && !buy.isEmpty() && !sell.isEmpty()) {
+            int possShares = 0;
+            double transPrice = 0;
+            if (buy.peek().isLimit() && sell.peek().isLimit() && buy.peek().getPrice() <= sell.peek().getPrice()) {
+                // execute at the sell order price
+                possShares = Math.min(buy.peek().getShares(), sell.peek().getShares());
+                buy.peek().subtractShares(possShares);
+                sell.peek().subtractShares(possShares);
+                transPrice = sell.peek().getPrice();
+                if (transPrice < low) low = transPrice;
+                else if (transPrice > high) high = transPrice;
+                close = transPrice;
+                volume += possShares;
+                sell.peek().getTrader().receiveMessage("You sold: " + possShares + " " + sell.peek().getSymbol() +
+                        " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
+                buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
+                        " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
+                if (buy.peek().getShares() == 0) buy.poll();
+                else sell.poll();
+            } else if ((buy.peek().isLimit() && sell.peek().isMarket()) || (buy.peek().isMarket() && sell.peek().isLimit())) {
+                // execute at the limit order price
+                possShares = Math.min(buy.peek().getShares(), sell.peek().getShares());
+                buy.peek().subtractShares(possShares);
+                sell.peek().subtractShares(possShares);
+                if (buy.peek().isLimit()) transPrice = buy.peek().getPrice();
+                else if (sell.peek().isLimit()) transPrice = sell.peek().getPrice();
+                if (transPrice < low) low = transPrice;
+                else if (transPrice > high) high = transPrice;
+                close = transPrice;
+                volume += possShares;
+                sell.peek().getTrader().receiveMessage("You sold: " + possShares + " " + sell.peek().getSymbol() +
+                        " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
+                buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
+                        " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
+                if (buy.peek().getShares() == 0) buy.poll();
+                else sell.poll();
+            } else {
+                // execute at the last sale price
+                possShares = Math.min(buy.peek().getShares(), sell.peek().getShares());
+                volume += possShares;
+                buy.peek().subtractShares(possShares);
+                sell.peek().subtractShares(possShares);
+                sell.peek().getTrader().receiveMessage("You sold: " + possShares + " " + sell.peek().getSymbol() +
+                        " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
+                buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
+                        " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
+                if (buy.peek().getShares() == 0) buy.poll();
+                else sell.poll();
+            }
         }
     }
 
