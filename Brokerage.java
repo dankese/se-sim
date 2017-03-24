@@ -62,12 +62,12 @@ public class Brokerage implements Login{
 
     public int login(String name, String password) {
         if (!registeredTraders.containsKey(name)) return -1;
-        else if (!registeredTraders.get(name).equals(password)) return -2;
+        else if (!registeredTraders.get(name).getPassword().equals(password)) return -2;
         else if (loggedInTraders.contains(registeredTraders.get(name))) return -3;
         else {
-            registeredTraders.get(name).receiveMessage("Welcome to SafeTrade!");
             registeredTraders.get(name).openWindow();
             loggedInTraders.add(registeredTraders.get(name));
+            registeredTraders.get(name).receiveMessage("Welcome to SafeTrade!");
             return 0;
         }
     }
