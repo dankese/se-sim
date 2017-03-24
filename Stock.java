@@ -71,10 +71,22 @@ public class Stock {
      *
      * @param order
      */
-    public void placeOrder(TradeOrder order) {
-        if (order.isBuy()) buy.add(order);
-        else sell.add(executeOrders);
 
+    public void placeOrder(TradeOrder order) {
+        if (order.isBuy()) {
+            buy.add(order);
+            if (order.isMarket())
+                order.getTrader().receiveMessage("New order: " + "Buy " + order.getShares() + " shares at market");
+            else
+                order.getTrader().receiveMessage("New order: " + "Buy " + order.getShares() + " shares at $" + order.getPrice());
+        } else {
+            sell.add(order);
+            if (order.isMarket())
+                order.getTrader().receiveMessage("New order: " + "Sell " + order.getShares() + " shares at market");
+            else
+                order.getTrader().receiveMessage("New order: " + "Sell " + order.getShares() + " shares at $" + order.getPrice());
+        }
+        executeOrders();
     }
 
     /**
@@ -113,14 +125,12 @@ public class Stock {
      */
 
     protected void executeOrders() {
-        while (!buy.isEmpty() && !sell.isEmpty() && !buy.peek().isLimit() && !sell.peek().isLimit() && !(sell.peek().getPrice() > buy.peek().getPrice())) {
+        while (!buy.isEmpty() && !sell.isEmpty()) {
             int possShares = 0;
             double transPrice = 0;
             if (buy.peek().isLimit() && sell.peek().isLimit() && buy.peek().getPrice() <= sell.peek().getPrice()) {
                 // execute at the sell order price
                 possShares = Math.min(buy.peek().getShares(), sell.peek().getShares());
-                buy.peek().subtractShares(possShares);
-                sell.peek().subtractShares(possShares);
                 transPrice = sell.peek().getPrice();
                 if (transPrice < low) low = transPrice;
                 else if (transPrice > high) high = transPrice;
@@ -130,6 +140,8 @@ public class Stock {
                         " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
                 buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
                         " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
+                buy.peek().subtractShares(possShares);
+                sell.peek().subtractShares(possShares);
                 if (buy.peek().getShares() == 0) buy.poll();
                 else sell.poll();
             } else if ((buy.peek().isLimit() && sell.peek().isMarket()) || (buy.peek().isMarket() && sell.peek().isLimit())) {
@@ -147,18 +159,20 @@ public class Stock {
                         " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
                 buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
                         " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
+                buy.peek().subtractShares(possShares);
+                sell.peek().subtractShares(possShares);
                 if (buy.peek().getShares() == 0) buy.poll();
                 else sell.poll();
             } else {
                 // execute at the last sale price
                 possShares = Math.min(buy.peek().getShares(), sell.peek().getShares());
                 volume += possShares;
+                sell.peek().getTrader().receiveMessage("You sold: " + possShares + " " + sell.peek().getSymbol() +
+                        " at " + close + " amt " + possShares * close);
+                buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
+                        " at " + close + " amt " + possShares * close);
                 buy.peek().subtractShares(possShares);
                 sell.peek().subtractShares(possShares);
-                sell.peek().getTrader().receiveMessage("You sold: " + possShares + " " + sell.peek().getSymbol() +
-                        " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
-                buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
-                        " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
                 if (buy.peek().getShares() == 0) buy.poll();
                 else sell.poll();
             }
