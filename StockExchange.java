@@ -42,5 +42,4 @@ public class StockExchange {
     public void placeOrder(TradeOrder order) {
         stocks.get(order.getSymbol()).placeOrder(order);
     }
-
 }
