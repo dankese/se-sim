@@ -128,7 +128,7 @@ public class Stock {
         while (!buy.isEmpty() && !sell.isEmpty()) {
             int possShares = 0;
             double transPrice = 0;
-            if (buy.peek().isLimit() && sell.peek().isLimit() && buy.peek().getPrice() <= sell.peek().getPrice()) {
+            if (buy.peek().isLimit() && sell.peek().isLimit() && buy.peek().getPrice() >= sell.peek().getPrice()) {
                 // execute at the sell order price
                 possShares = Math.min(buy.peek().getShares(), sell.peek().getShares());
                 transPrice = sell.peek().getPrice();
@@ -137,9 +137,9 @@ public class Stock {
                 close = transPrice;
                 volume += possShares;
                 sell.peek().getTrader().receiveMessage("You sold: " + possShares + " " + sell.peek().getSymbol() +
-                        " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
+                        " at " + transPrice + " amt " + possShares * transPrice);
                 buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
-                        " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
+                        " at " + transPrice + " amt " + possShares * transPrice);
                 buy.peek().subtractShares(possShares);
                 sell.peek().subtractShares(possShares);
                 if (buy.peek().getShares() == 0) buy.poll();
@@ -147,8 +147,6 @@ public class Stock {
             } else if ((buy.peek().isLimit() && sell.peek().isMarket()) || (buy.peek().isMarket() && sell.peek().isLimit())) {
                 // execute at the limit order price
                 possShares = Math.min(buy.peek().getShares(), sell.peek().getShares());
-                buy.peek().subtractShares(possShares);
-                sell.peek().subtractShares(possShares);
                 if (buy.peek().isLimit()) transPrice = buy.peek().getPrice();
                 else if (sell.peek().isLimit()) transPrice = sell.peek().getPrice();
                 if (transPrice < low) low = transPrice;
@@ -156,9 +154,9 @@ public class Stock {
                 close = transPrice;
                 volume += possShares;
                 sell.peek().getTrader().receiveMessage("You sold: " + possShares + " " + sell.peek().getSymbol() +
-                        " at " + sell.peek().getPrice() + " amt " + sell.peek().getShares() * sell.peek().getPrice());
+                        " at " + transPrice + " amt " + possShares * transPrice);
                 buy.peek().getTrader().receiveMessage("You bought: " + possShares + " " + buy.peek().getSymbol() +
-                        " at " + buy.peek().getPrice() + " amt " + buy.peek().getShares() * buy.peek().getPrice());
+                        " at " + transPrice + " amt " + possShares * transPrice);
                 buy.peek().subtractShares(possShares);
                 sell.peek().subtractShares(possShares);
                 if (buy.peek().getShares() == 0) buy.poll();
