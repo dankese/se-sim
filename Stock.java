@@ -73,7 +73,7 @@ public class Stock {
      */
     public void placeOrder(TradeOrder order) {
         if (order.isBuy()) buy.add(order);
-        else sell.add(order);
+        else sell.add(executeOrders);
 
     }
 
