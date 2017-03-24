@@ -79,5 +79,4 @@ public class Trader implements Comparable<Trader> {
         brokerage.logout(this);
         myWindow = null;
     }
-
 }
