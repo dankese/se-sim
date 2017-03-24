@@ -113,8 +113,7 @@ public class Stock {
      */
 
     protected void executeOrders() {
-        while (!buy.peek().isLimit() && !sell.peek().isLimit() && !(sell.peek().getPrice() > buy.peek().getPrice())
-                && !buy.isEmpty() && !sell.isEmpty()) {
+        while (!buy.isEmpty() && !sell.isEmpty() && !buy.peek().isLimit() && !sell.peek().isLimit() && !(sell.peek().getPrice() > buy.peek().getPrice())) {
             int possShares = 0;
             double transPrice = 0;
             if (buy.peek().isLimit() && sell.peek().isLimit() && buy.peek().getPrice() <= sell.peek().getPrice()) {
