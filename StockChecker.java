@@ -55,3 +55,22 @@ public class StockChecker {
     
 
 }
+
+
+/*
+
+add to stock exchangeVVVVVVV
+
+public void listStock(String symbol){
+		listStock(symbol,checker.nameOf(symbol),checker.priceOf(symbol));
+	}
+
+	public String getQuote(String symbol){
+		if(!stocks.containsKey(symbol)){
+			listStock(symbol);
+		}
+		return stocks.get(symbol).getQuote();
+	}
+
+
+*/
